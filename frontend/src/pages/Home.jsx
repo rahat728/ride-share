@@ -86,9 +86,16 @@ const Home = () => {
         <div className="flex justify-end mb-4">
           <button
             onClick={handleRequestRide}
-            className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+            disabled={activeRides.length > 0}
+            className={`px-6 py-2 text-white rounded transition ${
+              activeRides.length > 0
+                ? "bg-gray-400 cursor-not-allowed"
+                : "bg-blue-600 hover:bg-blue-700"
+            }`}
           >
-            Request New Ride
+            {activeRides.length > 0
+              ? "Finish Current Ride First"
+              : "Request New Ride"}
           </button>
         </div>
 

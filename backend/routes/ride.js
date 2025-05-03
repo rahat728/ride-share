@@ -3,6 +3,7 @@ const { protect } = require('../middleware/authMiddleware');
 const roleCheck = require('../middleware/roleMiddleware');
 const { createRideRequest, getUserRideRequests } = require('../controllers/rideController');
 const { getPendingRides, acceptRideRequest } = require('../controllers/rideController');
+const { completeRide } = require('../controllers/rideController');
 
 const router = express.Router();
 
@@ -13,4 +14,6 @@ router.get('/pending', protect, roleCheck('driver'), getPendingRides);
 // POST accept a ride request — driver only
 router.post('/accept/:id', protect, roleCheck('driver'), acceptRideRequest);
 
+// Mark ride as completed (driver only)
+router.post('/complete/:id', protect, roleCheck('driver'), completeRide);
 module.exports = router;

@@ -5,46 +5,52 @@ import TripLiveTracking from "../components/TripLiveTracking";
 import { connectTestSocket, listenForDriverLocation } from "../testSocket"; // Import necessary functions
 
 const Home = () => {
-  const [rideRequests, setRideRequests] = useState([]);
   const [user, setUser] = useState(null);
   const [trackingRideId, setTrackingRideId] = useState(null);
   const [driverLocation, setDriverLocation] = useState(null); // To store driver's real-time location
 
   const navigate = useNavigate();
+  const [activeRides, setActiveRides] = useState([]);
+  const [completedRides, setCompletedRides] = useState([]);
 
   useEffect(() => {
     const userInfo = JSON.parse(localStorage.getItem("userInfo"));
-
     setUser(userInfo);
-    console.log("User info:", userInfo);
 
-    // Connect to socket on page load
     if (userInfo?.token) {
-      connectTestSocket(userInfo.token); // 🧠 Connect with valid token!
+      connectTestSocket(userInfo.token);
     }
 
     const fetchRides = async () => {
       try {
-        const { data } = await axios.get("/api/ride/my-requests", {
-          headers: {
-            Authorization: `Bearer ${userInfo.token}`,
-          },
-        });
-        setRideRequests(data);
-        console.log("Fetched ride requests:", data);
+        const { data } = await axios.get(
+          "http://localhost:5000/api/trips/my-trips",
+          {
+            headers: {
+              Authorization: `Bearer ${userInfo.token}`,
+            },
+          }
+        );
+
+        console.log("Fetched rides:", data);
+        const active = data.filter((ride) => ride.status !== "completed");
+        const completed = data.filter((ride) => ride.status === "completed");
+
+        setActiveRides(active);
+        setCompletedRides(completed);
       } catch (error) {
         console.error("Error fetching ride requests", error);
       }
     };
 
-    if (userInfo) {
-      fetchRides();
-    }
+    if (userInfo) fetchRides();
   }, []);
 
   // Handle tracking of the ride
   const handleTrackRide = (rideId) => {
     setTrackingRideId(rideId);
+    console.log("Tracking trip ID:", rideId);
+
     // Listen for driver location updates once tracking begins
     listenForDriverLocation(rideId, (location) => {
       setDriverLocation(location); // Update the driver's location
@@ -86,34 +92,34 @@ const Home = () => {
           </button>
         </div>
 
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h2 className="text-2xl font-semibold mb-4">My Ride Requests</h2>
+        <div className="bg-white p-6 rounded-lg shadow mb-6">
+          <h2 className="text-2xl font-semibold mb-4">Active Ride Requests</h2>
 
-          {rideRequests.length === 0 ? (
-            <p className="text-gray-500">No ride requests yet.</p>
+          {activeRides.length === 0 ? (
+            <p className="text-gray-500">No active ride requests.</p>
           ) : (
             <div className="space-y-4">
-              {rideRequests.map((ride) => (
+              {activeRides.map((ride) => (
                 <div
                   key={ride._id}
                   className="p-4 border rounded-lg hover:shadow-md transition"
                 >
                   <p>
-                    <strong>Pickup:</strong> {ride.pickupLocation}
+                    <strong>Pickup:</strong> {ride.rideRequest?.pickupLocation}
                   </p>
                   <p>
-                    <strong>Dropoff:</strong> {ride.dropoffLocation}
+                    <strong>Dropoff:</strong>{" "}
+                    {ride.rideRequest?.dropoffLocation}
                   </p>
+
                   <p>
                     <strong>Status:</strong>{" "}
                     <span
-                      className={`${
+                      className={`font-semibold ${
                         ride.status === "pending"
                           ? "text-yellow-500"
-                          : ride.status === "accepted"
-                          ? "text-green-500"
-                          : "text-red-500"
-                      } font-semibold`}
+                          : "text-green-500"
+                      }`}
                     >
                       {ride.status}
                     </span>
@@ -122,14 +128,52 @@ const Home = () => {
                     Requested at: {new Date(ride.createdAt).toLocaleString()}
                   </p>
 
-                  {ride.status === "accepted" && (
+                  {["accepted", "arrived", "in_progress"].includes(
+                    ride.status
+                  ) && (
                     <button
-                      onClick={() => handleTrackRide(ride._id)}
+                      onClick={() => handleTrackRide(ride.rideRequest?._id)}
                       className="mt-4 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition"
                     >
                       Track Ride
                     </button>
                   )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Completed Rides */}
+        <div className="bg-white p-6 rounded-lg shadow">
+          <h2 className="text-2xl font-semibold mb-4">Completed Rides</h2>
+
+          {completedRides.length === 0 ? (
+            <p className="text-gray-500">No completed rides yet.</p>
+          ) : (
+            <div className="space-y-4">
+              {completedRides.map((ride) => (
+                <div
+                  key={ride._id}
+                  className="p-4 border rounded-lg bg-gray-50"
+                >
+                  <p>
+                    <strong>Pickup:</strong> {ride.rideRequest?.pickupLocation}
+                  </p>
+                  <p>
+                    <strong>Dropoff:</strong>{" "}
+                    {ride.rideRequest?.dropoffLocation}
+                  </p>
+
+                  <p>
+                    <strong>Status:</strong>{" "}
+                    <span className="text-blue-600 font-semibold">
+                      Completed
+                    </span>
+                  </p>
+                  <p className="text-sm text-gray-400">
+                    Completed at: {new Date(ride.updatedAt).toLocaleString()}
+                  </p>
                 </div>
               ))}
             </div>

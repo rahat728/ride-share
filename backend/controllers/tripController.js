@@ -1,5 +1,27 @@
 const Trip = require('../models/Trip');
 
+
+const getUserTrips = async (req, res) => {
+  try {
+    const trips = await Trip.find()
+      .populate({
+        path: 'rideRequest',
+        match: { user: req.user.id },
+        populate: { path: 'user', select: 'name email' }
+      })
+      .populate('driver', 'name email')
+      .sort({ createdAt: -1 });
+
+    // Filter out trips where rideRequest is null (not this user)
+    const userTrips = trips.filter(trip => trip.rideRequest);
+
+    res.json(userTrips);
+  } catch (error) {
+    console.error('Error fetching user trips:', error);
+    res.status(500).json({ error: 'Failed to fetch user trips' });
+  }
+};
+
 // PATCH /api/trips/:id/status
 const updateTripStatus = async (req, res) => {
 
@@ -61,6 +83,7 @@ const getCompletedTrips = async (req, res) => {
 module.exports = {
     updateTripStatus, 
     getAcceptedTrips,
-    getCompletedTrips
+    getCompletedTrips,
+    getUserTrips
   };
   

@@ -35,7 +35,8 @@ const AcceptedRides = () => {
   const updateStatus = async (tripId, newStatus) => {
     const userInfo = JSON.parse(localStorage.getItem('userInfo'));
     try {
-      await axios.patch(`/api/trips/${tripId}/status`, { status: newStatus }, {
+      await axios.patch(`http://localhost:5000/api/trips/${tripId}/status`, { status: newStatus }, {
+
         headers: {
           Authorization: `Bearer ${userInfo.token}`,
         },
@@ -100,7 +101,7 @@ const AcceptedRides = () => {
                   <>
                     {trip.status !== 'arrived' && (
                       <button
-                        onClick={() => updateStatus(trip.rideRequest._id, 'arrived')}
+                        onClick={() => updateStatus(trip._id, 'arrived')}
                         className="bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600 transition"
                       >
                         Arrived
@@ -108,7 +109,7 @@ const AcceptedRides = () => {
                     )}
                     {trip.status === 'arrived' && (
                       <button
-                        onClick={() => updateStatus(trip.rideRequest._id, 'in_progress')}
+                        onClick={() => updateStatus(trip._id, 'in_progress')}
                         className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600 transition"
                       >
                         In Progress
@@ -116,7 +117,7 @@ const AcceptedRides = () => {
                     )}
                     {trip.status === 'in_progress' && (
                       <button
-                        onClick={() => updateStatus(trip.rideRequest._id, 'completed')}
+                        onClick={() => updateStatus(trip._id, 'completed')}
                         className="bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600 transition"
                       >
                         Completed

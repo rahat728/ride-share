@@ -58,6 +58,29 @@ const acceptRideRequest = async (req, res) => {
       res.status(500).json({ error: 'Server error accepting ride' });
     }
   };
+
+  // backend/controllers/rideControllers.js
+const completeRide = async (req, res) => {
+  try {
+    const rideRequestId = req.params.id;
+
+    const ride = await RideRequest.findById(rideRequestId);
+    if (!ride) return res.status(404).json({ error: 'Ride not found' });
+
+    // Only allow completion if status is 'accepted'
+    if (ride.status !== 'accepted') {
+      return res.status(400).json({ error: 'Only accepted rides can be completed' });
+    }
+
+    ride.status = 'completed';
+    await ride.save();
+
+    res.json({ message: 'Ride marked as completed' });
+  } catch (error) {
+    res.status(500).json({ error: 'Server error marking ride complete' });
+  }
+};
+
   
 
-module.exports = { createRideRequest, getUserRideRequests, getPendingRides, acceptRideRequest };
+module.exports = { createRideRequest, getUserRideRequests, getPendingRides, acceptRideRequest, completeRide };

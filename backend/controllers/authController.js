@@ -4,23 +4,53 @@ const jwt = require('jsonwebtoken');
 
 const register = async (req, res) => {
   try {
-    const { name, email, password, role } = req.body;
+    const {
+      name,
+      email,
+      password,
+      role = 'user',
+      vehicleType,
+      vehicleCapacity,
+      vehicleColor,
+      vehiclePlate,
+    } = req.body;
 
-    // Validate role
     const validRoles = ['user', 'driver', 'admin'];
-    if (role && !validRoles.includes(role)) {
+    if (!validRoles.includes(role)) {
       return res.status(400).json({ error: 'Invalid role specified' });
     }
 
     const userExists = await User.findOne({ email });
     if (userExists) return res.status(400).json({ error: 'User already exists' });
 
+    // Validate driver fields if role is driver
+    if (role === 'driver') {
+      if (!vehicleType || !vehicleCapacity || !vehicleColor || !vehiclePlate) {
+        return res.status(400).json({ error: 'All vehicle fields are required for drivers' });
+      }
+    }
+
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    const user = await User.create({ name, email, password: hashedPassword, role: role || 'user' });
+    const newUserData = {
+      name,
+      email,
+      password: hashedPassword,
+      role,
+    };
+
+    if (role === 'driver') {
+      newUserData.vehicleType = vehicleType;
+      newUserData.vehicleCapacity = vehicleCapacity;
+      newUserData.vehicleColor = vehicleColor.trim();
+      newUserData.vehiclePlate = vehiclePlate.trim();
+    }
+
+    await User.create(newUserData);
 
     res.status(201).json({ message: 'User registered successfully' });
+
   } catch (error) {
     console.error('Error during registration:', error);
     res.status(500).json({ error: 'Server error' });

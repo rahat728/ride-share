@@ -9,6 +9,10 @@ function Register() {
     password: "",
     role: "user",
   });
+  const [vehicleColor, setVehicleColor] = useState("");
+  const [vehiclePlate, setVehiclePlate] = useState("");
+  const [vehicleCapacity, setVehicleCapacity] = useState("");
+  const [vehicleType, setVehicleType] = useState("");
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
@@ -20,15 +24,44 @@ function Register() {
     e.preventDefault();
     setError("");
 
+    // Validation for driver fields
+    if (form.role === "driver") {
+      if (
+        !vehicleCapacity ||
+        !vehicleType ||
+        !vehicleColor.trim() ||
+        !vehiclePlate.trim()
+      ) {
+        setError("Please fill in all vehicle details.");
+        return;
+      }
+    }
+
+    const payload =
+      form.role === "driver"
+        ? {
+            ...form,
+            vehicleCapacity,
+            vehicleType,
+            vehicleColor: vehicleColor.trim(),
+            vehiclePlate: vehiclePlate.trim(),
+          }
+        : form;
+
+        
     try {
-      await API.post("/auth/register", form);
-      alert("Registration successful! Please login.");
+      await API.post("/auth/register", payload);
       setForm({ name: "", email: "", password: "", role: "user" });
+      setVehicleCapacity("");
+      setVehicleType("");
+      setVehicleColor("");
+      setVehiclePlate("");
       navigate("/login");
     } catch (err) {
       setError(err.response?.data?.error || "Something went wrong");
     }
   };
+  
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 px-4 py-10">
@@ -83,6 +116,60 @@ function Register() {
               <option value="driver">Driver</option>
             </select>
           </div>
+
+          {form.role === "driver" && (
+            <>
+              <div>
+                <h3 className="text-lg font-medium mb-2">Vehicle Information</h3>
+                <div className="flex gap-4 mb-6">
+                  <input
+                    required
+                    type="text"
+                    placeholder="Vehicle Color"
+                    value={vehicleColor}
+                    onChange={(e) => setVehicleColor(e.target.value)}
+                    className="bg-[#eeeeee] w-1/2 rounded-lg px-4 py-2 border text-lg placeholder:text-base"
+                  />
+                  <input
+                    required
+                    type="text"
+                    placeholder="Vehicle Plate"
+                    value={vehiclePlate}
+                    onChange={(e) => setVehiclePlate(e.target.value)}
+                    className="bg-[#eeeeee] w-1/2 rounded-lg px-4 py-2 border text-lg placeholder:text-base"
+                  />
+                </div>
+              </div>
+              <div className="flex gap-4 mb-4">
+                <input
+                  required
+                  className="bg-[#eeeeee] w-1/2 rounded-lg px-4 py-2 border text-lg placeholder:text-base"
+                  type="number"
+                  min={1}
+                  max={6}
+                  placeholder="Vehicle Capacity"
+                  value={vehicleCapacity}
+                  onChange={(e) => {
+                    const val = Number(e.target.value);
+                    if (val >= 1 && val <= 6) setVehicleCapacity(e.target.value);
+                  }}
+                />
+                <select
+                  required
+                  className="bg-[#eeeeee] w-1/2 rounded-lg px-4 py-2 border text-lg placeholder:text-base"
+                  value={vehicleType}
+                  onChange={(e) => setVehicleType(e.target.value)}
+                >
+                  <option value="" disabled>
+                    🚗 Select Vehicle Type
+                  </option>
+                  <option value="car">🚘 Car</option>
+                  <option value="auto">🛺 Auto</option>
+                  <option value="moto">🏍️ Moto</option>
+                </select>
+              </div>
+            </>
+          )}
 
           <button
             type="submit"

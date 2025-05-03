@@ -3,12 +3,21 @@ const Trip = require('../models/Trip');
 
 const createRideRequest = async (req, res) => {
   try {
-    const { pickupLocation, dropoffLocation } = req.body;
+    const {
+      pickupLocation,
+      dropoffLocation,
+      pickupCoordinates,
+      dropoffCoordinates
+    } = req.body;
+
     const newRequest = await RideRequest.create({
       user: req.user.id,
       pickupLocation,
-      dropoffLocation
+      dropoffLocation,
+      pickupCoordinates,
+      dropoffCoordinates
     });
+
     res.status(201).json(newRequest);
   } catch (error) {
     res.status(500).json({ error: 'Server error creating ride request' });

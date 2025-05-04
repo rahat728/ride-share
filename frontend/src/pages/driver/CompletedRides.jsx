@@ -1,10 +1,9 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
 const CompletedRides = () => {
   const [completedRides, setCompletedRides] = useState([]);
-  const navigate = useNavigate();
+
 
   useEffect(() => {
     const userInfo = JSON.parse(localStorage.getItem('userInfo'));
@@ -28,8 +27,7 @@ const CompletedRides = () => {
   }, []);
 
   return (
-    <div className="min-h-screen flex flex-col items-center bg-gray-100 p-4">
-      <h1 className="text-3xl font-bold mb-8">Completed Rides</h1>
+    <div className=" flex flex-col items-center bg-gray-100 p-4">
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {completedRides.length > 0 ? (
@@ -50,12 +48,7 @@ const CompletedRides = () => {
         )}
       </div>
 
-      <button
-        onClick={() => navigate('/driver')}
-        className="mt-8 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-      >
-        Home
-      </button>
+   
     </div>
   );
 };

@@ -151,7 +151,7 @@ const RideRequestForm = () => {
       alert("Geolocation is not supported by your browser.");
       return;
     }
-  
+
     navigator.geolocation.getCurrentPosition(
       async (position) => {
         const coords = {
@@ -159,14 +159,16 @@ const RideRequestForm = () => {
           lng: position.coords.longitude,
         };
         setPickupCoords(coords);
-  
+
         // Use GoMaps to reverse geocode
         try {
           const reverseRes = await fetch(
-            `https://maps.gomaps.pro/maps/api/geocode/json?latlng=${coords.lat},${coords.lng}&key=${import.meta.env.VITE_GOMAPS_API_KEY}`
+            `https://maps.gomaps.pro/maps/api/geocode/json?latlng=${
+              coords.lat
+            },${coords.lng}&key=${import.meta.env.VITE_GOMAPS_API_KEY}`
           );
           const reverseData = await reverseRes.json();
-  
+
           if (
             reverseData.status === "OK" &&
             reverseData.results &&
@@ -191,9 +193,6 @@ const RideRequestForm = () => {
       }
     );
   };
-  
-  
-  
 
   return (
     <div className="max-w-6xl mx-auto mt-10 p-4">
@@ -214,13 +213,13 @@ const RideRequestForm = () => {
                 ref={pickupRef}
                 defaultValue={pickupLocation}
                 onChange={(e) => setPickupLocation(e.target.value)}
-                className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+                className="bg-[#eeeeee] mb-2 rounded-lg px-4 py-2 border w-full text-lg placeholder:text-base"
                 required
               />
               <button
                 type="button"
                 onClick={handleUseCurrentLocation}
-                className="mt-2 text-blue-600 text-sm underline hover:text-blue-800"
+                className="text-blue-600 hover:underline cursor-pointer"
               >
                 Use current location
               </button>
@@ -236,7 +235,7 @@ const RideRequestForm = () => {
                 ref={dropoffRef}
                 defaultValue={dropoffLocation}
                 onChange={(e) => setDropoffLocation(e.target.value)}
-                className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+                className="bg-[#eeeeee] mb-2 rounded-lg px-4 py-2 border w-full text-lg placeholder:text-base"
                 required
               />
             </div>
@@ -247,10 +246,9 @@ const RideRequestForm = () => {
                 Estimated Time: <strong>{distanceInfo.duration}</strong>
               </div>
             )}
-
             <button
               type="submit"
-              className="w-full bg-blue-500 text-white py-3 rounded-lg hover:bg-blue-600 transition"
+              className="bg-[#111] text-white font-semibold mb-3 rounded-lg px-4 py-2 w-full text-lg"
             >
               Request Ride
             </button>

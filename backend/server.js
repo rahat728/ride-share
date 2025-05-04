@@ -5,7 +5,7 @@ const cors = require('cors');
 const mongoose = require('mongoose');
 const jwt = require('jsonwebtoken');
 const { protect } = require('./middleware/authMiddleware');
-
+const locationRoutes = require('./routes/location');
 const socketIO = require('socket.io');
 
 dotenv.config();
@@ -48,6 +48,7 @@ app.use('/api/ride', rideRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/trips', tripRoutes);
 app.use('/api/rideRequests', rideRequestRoutes);
+app.use('/api/location', locationRoutes);
 
 // Private Test Route
 app.get('/api/private', protect, (req, res) => {

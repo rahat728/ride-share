@@ -1,10 +1,10 @@
-import { useState, useEffect, useRef } from 'react';
-import { createRideRequest } from '../services/rideService';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect, useRef } from "react";
+import { createRideRequest } from "../services/rideService";
+import { useNavigate } from "react-router-dom";
 
 const RideRequestForm = () => {
-  const [pickupLocation, setPickupLocation] = useState('');
-  const [dropoffLocation, setDropoffLocation] = useState('');
+  const [pickupLocation, setPickupLocation] = useState("");
+  const [dropoffLocation, setDropoffLocation] = useState("");
   const [pickupCoords, setPickupCoords] = useState(null);
   const [dropoffCoords, setDropoffCoords] = useState(null);
   const [distanceInfo, setDistanceInfo] = useState(null);
@@ -30,14 +30,20 @@ const RideRequestForm = () => {
       newDirectionsRenderer.setMap(newMap);
       setDirectionsRenderer(newDirectionsRenderer);
 
-      const pickupAutocomplete = new window.google.maps.places.Autocomplete(pickupRef.current, {
-        types: ['geocode'],
-      });
-      const dropoffAutocomplete = new window.google.maps.places.Autocomplete(dropoffRef.current, {
-        types: ['geocode'],
-      });
+      const pickupAutocomplete = new window.google.maps.places.Autocomplete(
+        pickupRef.current,
+        {
+          types: ["geocode"],
+        }
+      );
+      const dropoffAutocomplete = new window.google.maps.places.Autocomplete(
+        dropoffRef.current,
+        {
+          types: ["geocode"],
+        }
+      );
 
-      pickupAutocomplete.addListener('place_changed', () => {
+      pickupAutocomplete.addListener("place_changed", () => {
         const place = pickupAutocomplete.getPlace();
         if (place.geometry) {
           setPickupLocation(place.formatted_address);
@@ -49,7 +55,7 @@ const RideRequestForm = () => {
         }
       });
 
-      dropoffAutocomplete.addListener('place_changed', () => {
+      dropoffAutocomplete.addListener("place_changed", () => {
         const place = dropoffAutocomplete.getPlace();
         if (place.geometry) {
           setDropoffLocation(place.formatted_address);
@@ -69,8 +75,8 @@ const RideRequestForm = () => {
       const marker = new window.google.maps.Marker({
         position: pickupCoords,
         map,
-        title: 'Pickup Location',
-        icon: 'http://maps.google.com/mapfiles/ms/icons/green-dot.png',
+        title: "Pickup Location",
+        icon: "http://maps.google.com/mapfiles/ms/icons/green-dot.png",
       });
       setPickupMarker(marker);
     }
@@ -82,8 +88,8 @@ const RideRequestForm = () => {
       const marker = new window.google.maps.Marker({
         position: dropoffCoords,
         map,
-        title: 'Dropoff Location',
-        icon: 'http://maps.google.com/mapfiles/ms/icons/red-dot.png',
+        title: "Dropoff Location",
+        icon: "http://maps.google.com/mapfiles/ms/icons/red-dot.png",
       });
       setDropoffMarker(marker);
     }
@@ -96,10 +102,10 @@ const RideRequestForm = () => {
         {
           origin: pickupCoords,
           destination: dropoffCoords,
-          travelMode: 'DRIVING',
+          travelMode: "DRIVING",
         },
         (result, status) => {
-          if (status === 'OK') {
+          if (status === "OK") {
             directionsRenderer.setDirections(result);
             map.setCenter(pickupCoords);
             map.setZoom(12);
@@ -110,7 +116,7 @@ const RideRequestForm = () => {
               duration: leg.duration.text,
             });
           } else {
-            console.error('Directions request failed:', status);
+            console.error("Directions request failed:", status);
           }
         }
       );
@@ -120,7 +126,9 @@ const RideRequestForm = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!pickupCoords || !dropoffCoords) {
-      alert('Please select valid pickup and dropoff locations from suggestions.');
+      alert(
+        "Please select valid pickup and dropoff locations from suggestions."
+      );
       return;
     }
 
@@ -132,60 +140,74 @@ const RideRequestForm = () => {
         dropoffCoordinates: dropoffCoords,
         ...distanceInfo,
       });
-      navigate('/home');
+      navigate("/home");
     } catch (error) {
-      console.error(error.response?.data?.error || 'Error creating ride');
+      console.error(error.response?.data?.error || "Error creating ride");
     }
   };
 
   const handleUseCurrentLocation = () => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const coords = {
-            lat: position.coords.latitude,
-            lng: position.coords.longitude,
-          };
-          setPickupCoords(coords);
-
-          const geocoder = new window.google.maps.Geocoder();
-          geocoder.geocode({ location: coords }, (results, status) => {
-            if (status === 'OK' && results[0]) {
-              setPickupLocation(results[0].formatted_address);
-              pickupRef.current.value = results[0].formatted_address;
-            } else {
-              alert('Failed to get address from your location.');
-            }
-          });
-        },
-        (error) => {
-          console.error('Geolocation error:', error);
-          if (error.code === 1) {
-            alert('Permission denied. Please allow location access.');
-          } else if (error.code === 2) {
-            alert('Position unavailable. Try again or enter manually.');
-          } else if (error.code === 3) {
-            alert('Request timed out. Please try again.');
-          } else {
-            alert('Unable to fetch location. Please enter it manually.');
-          }
-        },
-        { enableHighAccuracy: true, timeout: 10000 }
-      );
-    } else {
-      alert('Geolocation is not supported by your browser.');
+    if (!navigator.geolocation) {
+      alert("Geolocation is not supported by your browser.");
+      return;
     }
+  
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const coords = {
+          lat: position.coords.latitude,
+          lng: position.coords.longitude,
+        };
+        setPickupCoords(coords);
+  
+        // Use GoMaps to reverse geocode
+        try {
+          const reverseRes = await fetch(
+            `https://maps.gomaps.pro/maps/api/geocode/json?latlng=${coords.lat},${coords.lng}&key=${import.meta.env.VITE_GOMAPS_API_KEY}`
+          );
+          const reverseData = await reverseRes.json();
+  
+          if (
+            reverseData.status === "OK" &&
+            reverseData.results &&
+            reverseData.results.length > 0
+          ) {
+            const address = reverseData.results[0].formatted_address;
+            setPickupLocation(address);
+            if (pickupRef.current) {
+              pickupRef.current.value = address;
+            }
+          } else {
+            alert("Could not get a valid address.");
+          }
+        } catch (error) {
+          console.error("Reverse geocoding failed:", error);
+          alert("Error getting address.");
+        }
+      },
+      (error) => {
+        console.error("Geolocation error:", error);
+        alert("Failed to get current location.");
+      }
+    );
   };
+  
+  
+  
 
   return (
     <div className="max-w-6xl mx-auto mt-10 p-4">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Form Section */}
         <div className="bg-white p-6 shadow-lg rounded-xl">
-          <h2 className="text-2xl font-bold mb-6 text-center">Request a Ride</h2>
+          <h2 className="text-2xl font-bold mb-6 text-center">
+            Request a Ride
+          </h2>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Pickup Location</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Pickup Location
+              </label>
               <input
                 type="text"
                 placeholder="Enter pickup location"
@@ -205,7 +227,9 @@ const RideRequestForm = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Dropoff Location</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Dropoff Location
+              </label>
               <input
                 type="text"
                 placeholder="Enter dropoff location"

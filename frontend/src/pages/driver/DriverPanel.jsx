@@ -27,7 +27,7 @@ const DriverPanel = () => {
 
       <div className="space-y-10">
         <section>
-          <h2 className="text-2xl font-semibold mb-4">Pending Ride Requests</h2>
+
           <RideRequests />
         </section>
 

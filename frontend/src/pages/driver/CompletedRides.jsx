@@ -38,8 +38,8 @@ const CompletedRides = () => {
             >
               <h2 className="text-2xl font-semibold mb-2">Ride ID: {ride._id}</h2>
               <p className="text-gray-600">Status: {ride.status}</p>
-              <p className="text-gray-600 mt-2">Pickup Location: {ride.rideRequest.pickupLocation}</p>
-              <p className="text-gray-600">Dropoff Location: {ride.rideRequest.dropoffLocation}</p>
+              <p className="text-gray-600 mt-2">Pickup Location: {ride.rideRequest?.pickupLocation}</p>
+              <p className="text-gray-600">Dropoff Location: {ride.rideRequest?.dropoffLocation}</p>
               <p className="text-gray-600">Created At: {new Date(ride.createdAt).toLocaleString()}</p>
             </div>
           ))

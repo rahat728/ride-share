@@ -79,8 +79,8 @@ const AcceptedRides = () => {
           acceptedTrips.map((trip) => (
             <div key={trip._id} className="bg-white p-6 rounded-lg shadow-md flex flex-col gap-4">
               <div>
-                <p><span className="font-semibold">Pickup:</span> {trip.rideRequest.pickupLocation}</p>
-                <p><span className="font-semibold">Destination:</span> {trip.rideRequest.dropoffLocation}</p>
+                <p><span className="font-semibold">Pickup:</span> {trip.rideRequest?.pickupLocation}</p>
+                <p><span className="font-semibold">Destination:</span> {trip.rideRequest?.dropoffLocation}</p>
                 <p><span className="font-semibold">Status:</span> {trip.status}</p>
               </div>
 

@@ -7,7 +7,8 @@ const createRideRequest = async (req, res) => {
       pickupLocation,
       dropoffLocation,
       pickupCoordinates,
-      dropoffCoordinates
+      dropoffCoordinates,
+      vehicleType, // <-- new field
     } = req.body;
 
     const newRequest = await RideRequest.create({
@@ -15,7 +16,8 @@ const createRideRequest = async (req, res) => {
       pickupLocation,
       dropoffLocation,
       pickupCoordinates,
-      dropoffCoordinates
+      dropoffCoordinates,
+      vehicleType, // <-- save vehicle type
     });
 
     res.status(201).json(newRequest);
@@ -35,13 +37,24 @@ const getUserRideRequests = async (req, res) => {
 
 // GET all pending ride requests for drivers
 const getPendingRides = async (req, res) => {
-    try {
-      const rides = await RideRequest.find({ status: 'pending' }).populate('user', 'name email');
-      res.json(rides);
-    } catch (error) {
-      res.status(500).json({ error: 'Failed to fetch pending ride requests' });
+  try {
+    const driverVehicleType = req.user?.vehicleType;
+    if (!driverVehicleType) {
+      return res.status(400).json({ error: 'Driver vehicle type not specified' });
     }
-  };
+
+    const rides = await RideRequest.find({
+      status: 'pending',
+      vehicleType: driverVehicleType,
+    }).populate('user', 'name email');
+
+    res.json(rides);
+  } catch (error) {
+    console.error('Error fetching pending rides:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+};
+
 
 // POST: Accept a ride (create a trip)
 const acceptRideRequest = async (req, res) => {

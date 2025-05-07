@@ -7,6 +7,7 @@ const RideRequestForm = () => {
   const [dropoffLocation, setDropoffLocation] = useState("");
   const [pickupCoords, setPickupCoords] = useState(null);
   const [dropoffCoords, setDropoffCoords] = useState(null);
+  const [vehicleType, setVehicleType] = useState("");
   const [distanceInfo, setDistanceInfo] = useState(null);
   const [map, setMap] = useState(null);
   const [directionsRenderer, setDirectionsRenderer] = useState(null);
@@ -30,18 +31,12 @@ const RideRequestForm = () => {
       newDirectionsRenderer.setMap(newMap);
       setDirectionsRenderer(newDirectionsRenderer);
 
-      const pickupAutocomplete = new window.google.maps.places.Autocomplete(
-        pickupRef.current,
-        {
-          types: ["geocode"],
-        }
-      );
-      const dropoffAutocomplete = new window.google.maps.places.Autocomplete(
-        dropoffRef.current,
-        {
-          types: ["geocode"],
-        }
-      );
+      const pickupAutocomplete = new window.google.maps.places.Autocomplete(pickupRef.current, {
+        types: ["geocode"],
+      });
+      const dropoffAutocomplete = new window.google.maps.places.Autocomplete(dropoffRef.current, {
+        types: ["geocode"],
+      });
 
       pickupAutocomplete.addListener("place_changed", () => {
         const place = pickupAutocomplete.getPlace();
@@ -126,9 +121,11 @@ const RideRequestForm = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!pickupCoords || !dropoffCoords) {
-      alert(
-        "Please select valid pickup and dropoff locations from suggestions."
-      );
+      alert("Please select valid pickup and dropoff locations from suggestions.");
+      return;
+    }
+    if (!vehicleType) {
+      alert("Please select a vehicle type.");
       return;
     }
 
@@ -138,6 +135,7 @@ const RideRequestForm = () => {
         dropoffLocation,
         pickupCoordinates: pickupCoords,
         dropoffCoordinates: dropoffCoords,
+        vehicleType,
         ...distanceInfo,
       });
       navigate("/home");
@@ -160,12 +158,9 @@ const RideRequestForm = () => {
         };
         setPickupCoords(coords);
 
-        // Use GoMaps to reverse geocode
         try {
           const reverseRes = await fetch(
-            `https://maps.gomaps.pro/maps/api/geocode/json?latlng=${
-              coords.lat
-            },${coords.lng}&key=${import.meta.env.VITE_GOMAPS_API_KEY}`
+            `https://maps.gomaps.pro/maps/api/geocode/json?latlng=${coords.lat},${coords.lng}&key=${import.meta.env.VITE_GOMAPS_API_KEY}`
           );
           const reverseData = await reverseRes.json();
 
@@ -199,9 +194,7 @@ const RideRequestForm = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Form Section */}
         <div className="bg-white p-6 shadow-lg rounded-xl">
-          <h2 className="text-2xl font-bold mb-6 text-center">
-            Request a Ride
-          </h2>
+          <h2 className="text-2xl font-bold mb-6 text-center">Request a Ride</h2>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -238,6 +231,26 @@ const RideRequestForm = () => {
                 className="bg-[#eeeeee] mb-2 rounded-lg px-4 py-2 border w-full text-lg placeholder:text-base"
                 required
               />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Vehicle Type
+              </label>
+              <select
+                value={vehicleType}
+                onChange={(e) => setVehicleType(e.target.value)}
+                className="bg-[#eeeeee] mb-2 rounded-lg px-4 py-2 border w-full text-lg"
+                required
+              >
+                   <option value="" disabled>
+                    🚗 Select Vehicle Type
+                  </option>
+                  <option value="car">🚘 Car</option>
+                  <option value="auto">🛺 Auto</option>
+                  <option value="moto">🏍️ Moto</option>
+          
+              </select>
             </div>
 
             {distanceInfo && (

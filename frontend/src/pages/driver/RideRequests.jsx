@@ -1,6 +1,6 @@
-import { useEffect, useState, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import { useEffect, useState, useRef } from "react";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
 const RideRequests = () => {
   const [pendingRides, setPendingRides] = useState([]);
@@ -8,10 +8,16 @@ const RideRequests = () => {
   const [distanceData, setDistanceData] = useState({});
   const [tripDistances, setTripDistances] = useState({});
   const [activeMapRideId, setActiveMapRideId] = useState(null);
+  const [acceptedRideExists, setAcceptedRideExists] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const mapRefs = useRef({});
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const count = parseInt(localStorage.getItem("acceptedTripCount"), 10);
+    setAcceptedRideExists(count >= 1);
+  }, []);
 
   const parseDistance = (text) => {
     if (!text) return Infinity;
@@ -29,8 +35,8 @@ const RideRequests = () => {
         setDriverCoords(coords);
       },
       (error) => {
-        console.error('Error getting driver location:', error);
-        setError('Unable to fetch your current location.');
+        console.error("Error getting driver location:", error);
+        setError("Unable to fetch your current location.");
         setLoading(false);
       }
     );
@@ -38,11 +44,14 @@ const RideRequests = () => {
 
   useEffect(() => {
     const fetchAndSortRides = async () => {
-      const userInfo = JSON.parse(localStorage.getItem('userInfo'));
+      const userInfo = JSON.parse(localStorage.getItem("userInfo"));
       try {
-        const { data } = await axios.get('http://localhost:5000/api/ride/pending', {
-          headers: { Authorization: `Bearer ${userInfo.token}` },
-        });
+        const { data } = await axios.get(
+          "http://localhost:5000/api/ride/pending",
+          {
+            headers: { Authorization: `Bearer ${userInfo.token}` },
+          }
+        );
 
         if (!driverCoords) return;
 
@@ -51,9 +60,12 @@ const RideRequests = () => {
         const results = [];
 
         for (const ride of data) {
-          const pickupInfo = await getDistance(driverCoords, ride.pickupCoordinates);
-          const distanceText = pickupInfo?.distance?.text || '';
-          const durationText = pickupInfo?.duration?.text || '';
+          const pickupInfo = await getDistance(
+            driverCoords,
+            ride.pickupCoordinates
+          );
+          const distanceText = pickupInfo?.distance?.text || "";
+          const durationText = pickupInfo?.duration?.text || "";
 
           distancesMap[ride._id] = {
             distance: distanceText,
@@ -61,10 +73,13 @@ const RideRequests = () => {
           };
 
           // Also calculate pickup → dropoff distance
-          let tripDistance = '';
+          let tripDistance = "";
           if (ride.pickupCoordinates && ride.dropoffCoordinates) {
-            const leg = await getDistance(ride.pickupCoordinates, ride.dropoffCoordinates);
-            tripDistance = leg?.distance?.text || '';
+            const leg = await getDistance(
+              ride.pickupCoordinates,
+              ride.dropoffCoordinates
+            );
+            tripDistance = leg?.distance?.text || "";
             tripDistancesMap[ride._id] = tripDistance;
           }
 
@@ -78,15 +93,20 @@ const RideRequests = () => {
           await new Promise((res) => setTimeout(res, 300));
         }
 
-        const sorted = results.sort((a, b) => a._distanceValue - b._distanceValue);
+        const sorted = results.sort(
+          (a, b) => a._distanceValue - b._distanceValue
+        );
         setPendingRides(sorted);
         setDistanceData(distancesMap);
         setTripDistances(tripDistancesMap);
-        localStorage.setItem('sortedRides', JSON.stringify(sorted.map((r) => r._id)));
+        localStorage.setItem(
+          "sortedRides",
+          JSON.stringify(sorted.map((r) => r._id))
+        );
         setLoading(false);
       } catch (err) {
-        console.error('Error fetching rides:', err);
-        setError('Failed to fetch ride requests.');
+        console.error("Error fetching rides:", err);
+        setError("Failed to fetch ride requests.");
         setLoading(false);
       }
     };
@@ -103,13 +123,13 @@ const RideRequests = () => {
         {
           origin,
           destination,
-          travelMode: 'DRIVING',
+          travelMode: "DRIVING",
         },
         (result, status) => {
-          if (status === 'OK') {
+          if (status === "OK") {
             resolve(result.routes[0].legs[0]);
           } else {
-            console.warn('Directions failed:', status);
+            console.warn("Directions failed:", status);
             resolve(null);
           }
         }
@@ -118,20 +138,22 @@ const RideRequests = () => {
 
   const drawRoute = (map, origin, destination) => {
     const directionsService = new window.google.maps.DirectionsService();
-    const directionsRenderer = new window.google.maps.DirectionsRenderer({ suppressMarkers: true });
+    const directionsRenderer = new window.google.maps.DirectionsRenderer({
+      suppressMarkers: true,
+    });
     directionsRenderer.setMap(map);
 
     directionsService.route(
       {
         origin,
         destination,
-        travelMode: 'DRIVING',
+        travelMode: "DRIVING",
       },
       (result, status) => {
-        if (status === 'OK') {
+        if (status === "OK") {
           directionsRenderer.setDirections(result);
         } else {
-          console.warn('Failed to draw route:', status);
+          console.warn("Failed to draw route:", status);
         }
       }
     );
@@ -156,16 +178,16 @@ const RideRequests = () => {
       new window.google.maps.Marker({
         position: driverCoords,
         map: gMap,
-        title: 'Your Location',
-        icon: 'http://maps.google.com/mapfiles/ms/icons/blue-dot.png',
+        title: "Your Location",
+        icon: "http://maps.google.com/mapfiles/ms/icons/blue-dot.png",
       });
 
       if (ride.pickupCoordinates) {
         new window.google.maps.Marker({
           position: ride.pickupCoordinates,
           map: gMap,
-          title: 'Pickup',
-          icon: 'http://maps.google.com/mapfiles/ms/icons/green-dot.png',
+          title: "Pickup",
+          icon: "http://maps.google.com/mapfiles/ms/icons/green-dot.png",
         });
       }
 
@@ -173,8 +195,8 @@ const RideRequests = () => {
         new window.google.maps.Marker({
           position: ride.dropoffCoordinates,
           map: gMap,
-          title: 'Dropoff',
-          icon: 'http://maps.google.com/mapfiles/ms/icons/red-dot.png',
+          title: "Dropoff",
+          icon: "http://maps.google.com/mapfiles/ms/icons/red-dot.png",
         });
       }
 
@@ -185,9 +207,9 @@ const RideRequests = () => {
   };
 
   const acceptRide = async (rideId) => {
-    const userInfo = JSON.parse(localStorage.getItem('userInfo'));
+    const userInfo = JSON.parse(localStorage.getItem("userInfo"));
     try {
-      const { data } = await axios.post(
+      await axios.post(
         `http://localhost:5000/api/ride/accept/${rideId}`,
         {},
         {
@@ -196,10 +218,10 @@ const RideRequests = () => {
           },
         }
       );
-      localStorage.removeItem('sortedRides');
-      navigate(`/driver/trip/${data.tripId}`);
+      localStorage.removeItem("sortedRides");
+      navigate(`/driver`);
     } catch (err) {
-      console.error('Error accepting ride:', err);
+      console.error("Error accepting ride:", err);
     }
   };
 
@@ -216,7 +238,9 @@ const RideRequests = () => {
       ) : (
         <div className="grid gap-6 max-w-4xl mx-auto">
           {pendingRides.length === 0 ? (
-            <p className="text-gray-600 text-center">No pending ride requests.</p>
+            <p className="text-gray-600 text-center">
+              No pending ride requests.
+            </p>
           ) : (
             pendingRides.map((ride) => (
               <div
@@ -224,8 +248,14 @@ const RideRequests = () => {
                 className="bg-white rounded-2xl shadow-md p-6 transition hover:shadow-lg"
               >
                 <div className="space-y-1 text-gray-800">
-                  <p><span className="font-semibold">Pickup:</span> {ride.pickupLocation}</p>
-                  <p><span className="font-semibold">Dropoff:</span> {ride.dropoffLocation}</p>
+                  <p>
+                    <span className="font-semibold">Pickup:</span>{" "}
+                    {ride.pickupLocation}
+                  </p>
+                  <p>
+                    <span className="font-semibold">Dropoff:</span>{" "}
+                    {ride.dropoffLocation}
+                  </p>
                   <p className="text-sm text-gray-500">
                     Requested by: {ride.user?.name} ({ride.user?.email})
                   </p>
@@ -233,21 +263,35 @@ const RideRequests = () => {
 
                 {distanceData[ride._id] && (
                   <div className="text-sm text-gray-700 mt-3">
-                    <p><span className="font-medium">Distance to Pickup:</span> {distanceData[ride._id].distance}</p>
-                    <p><span className="font-medium">ETA:</span> {distanceData[ride._id].duration}</p>
+                    <p>
+                      <span className="font-medium">Distance to Pickup:</span>{" "}
+                      {distanceData[ride._id].distance}
+                    </p>
+                    <p>
+                      <span className="font-medium">ETA:</span>{" "}
+                      {distanceData[ride._id].duration}
+                    </p>
                   </div>
                 )}
 
                 {tripDistances[ride._id] && (
                   <div className="text-sm text-gray-700 mt-1">
-                    <p><span className="font-medium">Trip Distance:</span> {tripDistances[ride._id]}</p>
+                    <p>
+                      <span className="font-medium">Trip Distance:</span>{" "}
+                      {tripDistances[ride._id]}
+                    </p>
                   </div>
                 )}
 
                 <div className="mt-4 flex flex-wrap gap-3">
                   <button
+                    disabled={acceptedRideExists}
                     onClick={() => acceptRide(ride._id)}
-                    className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition"
+                    className={`${
+                      acceptedRideExists
+                        ? "bg-gray-400 cursor-not-allowed"
+                        : "bg-green-500 hover:bg-green-600"
+                    } text-white px-4 py-2 rounded transition`}
                   >
                     Accept Ride
                   </button>
@@ -256,7 +300,7 @@ const RideRequests = () => {
                     onClick={() => handleToggleMap(ride)}
                     className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition"
                   >
-                    {activeMapRideId === ride._id ? 'Hide Map' : 'Show Map'}
+                    {activeMapRideId === ride._id ? "Hide Map" : "Show Map"}
                   </button>
                 </div>
 

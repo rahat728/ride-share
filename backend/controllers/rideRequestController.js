@@ -1,16 +1,28 @@
 const RideRequest = require('../models/RideRequest');
 
-// GET /api/rideRequests/pending
 const getPendingRideRequests = async (req, res) => {
   try {
-    const pendingRides = await RideRequest.find({ status: 'pending' });
-    res.json(pendingRides);
+    if (!req.user) {
+      console.error('No req.user available in getPendingRideRequests');
+      return res.status(401).json({ error: 'Unauthorized access' });
+    }
+
+    const driverVehicleType = req.user.vehicleType;
+    if (!driverVehicleType) {
+      console.error('Driver vehicle type missing:', req.user);
+      return res.status(400).json({ error: 'Driver vehicle type not specified' });
+    }
+
+    const rides = await RideRequest.find({
+      status: 'pending',
+      vehicleType: driverVehicleType,
+    }).populate('user', 'name email');
+
+    res.json(rides);
   } catch (error) {
-    res.status(500).json({ error: 'Something went wrong' });
+    console.error('Error in getPendingRideRequests:', error);
+    res.status(500).json({ error: 'Server error' });
   }
 };
 
-module.exports = {
-  getPendingRideRequests,
-  // other controllers...
-};
+module.exports = { getPendingRideRequests };

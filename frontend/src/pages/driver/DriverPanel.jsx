@@ -32,7 +32,6 @@ const DriverPanel = () => {
         </section>
 
         <section>
-          <h2 className="text-2xl font-semibold mb-4">Accepted Rides</h2>
           <AcceptedRides />
         </section>
 

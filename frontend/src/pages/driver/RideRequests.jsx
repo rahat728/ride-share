@@ -227,10 +227,6 @@ const RideRequests = () => {
 
   return (
     <div className="bg-gray-50 min-h-screen py-8 px-4">
-      <h2 className="text-3xl font-bold mb-8 text-center text-gray-800">
-        Pending Ride Requests
-      </h2>
-
       {loading ? (
         <div className="text-center text-gray-500">Loading rides...</div>
       ) : error ? (

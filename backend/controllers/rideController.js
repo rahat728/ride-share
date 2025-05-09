@@ -38,22 +38,41 @@ const getUserRideRequests = async (req, res) => {
 // GET all pending ride requests for drivers
 const getPendingRides = async (req, res) => {
   try {
-    const driverVehicleType = req.user?.vehicleType;
-    if (!driverVehicleType) {
-      return res.status(400).json({ error: 'Driver vehicle type not specified' });
+    const role = req.user?.role;
+
+    // Case 1: Driver — filter by vehicleType
+    if (role === "driver") {
+      const driverVehicleType = req.user?.vehicleType;
+      if (!driverVehicleType) {
+        return res.status(400).json({ error: "Driver vehicle type not specified" });
+      }
+
+      const rides = await RideRequest.find({
+        status: "pending",
+        vehicleType: driverVehicleType,
+      }).populate("user", "name email");
+
+      return res.json(rides);
     }
 
-    const rides = await RideRequest.find({
-      status: 'pending',
-      vehicleType: driverVehicleType,
-    }).populate('user', 'name email');
+    // Case 2: User — return all pending ride requests (or just their own)
+    if (role === "user") {
+      const rides = await RideRequest.find({
+        status: "pending",
+        user: req.user._id, // optional: only return their own pending requests
+      }).populate("user", "name email");
 
-    res.json(rides);
+      return res.json(rides);
+    }
+
+    // Fallback if role not recognized
+    return res.status(403).json({ error: "Unauthorized role" });
   } catch (error) {
-    console.error('Error fetching pending rides:', error);
-    res.status(500).json({ error: 'Server error' });
+    console.error("Error fetching pending rides:", error);
+    res.status(500).json({ error: "Server error" });
   }
 };
+
 
 
 // POST: Accept a ride (create a trip)
